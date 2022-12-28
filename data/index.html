@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="bootstrap.min.css"/>
+    <script src="vue.js"></script>
+    <script src="axios.min.js"></script>
+     <meta charset="UTF-8">
+    <title>ESP32 thermistor regulator</title>
+    <style>
+        * {
+            font-family: Roboto, Arial, sans-serif;
+            color: #d2d3d7
+        }
+
+        body {
+            background-color: #313445;
+        }
+
+        .main_block {
+            display: block;
+            text-align: center;
+            margin: 0 auto;
+            box-shadow: 0 0 40px #232430;
+            padding: 20px 40px 80px;
+            width: 60%;
+            transition: ease-in-out 1s;
+            position: relative;
+        }
+
+        .control_buttons {
+            margin: 0.2em;
+            font-size: 2em;
+            width: 2em;
+            height: 2em;
+            border-radius: 10px;
+            border: black solid 1px;
+
+        }
+
+        .control_buttons:hover {
+            background-color: #f06952;
+            box-shadow: 0 0 10px #f06952;
+            border-radius: 10px;
+        }
+
+        i {
+
+            border: solid #d2d3d7;;
+            border-width: 0 3px 3px 0;
+            display: inline-block;
+            padding: 3px;
+        }
+        #rotate90
+        {
+            transform: rotate(90deg);
+            -webkit-transform: rotate(90deg);
+            border: 1px white solid;
+            margin: 0.8em;
+            width: 90%;
+            height: 72%;
+            padding: 5px;
+            z-index: 3;
+        }
+
+        .right {
+            transform: rotate(-45deg);
+            -webkit-transform: rotate(-45deg);
+        }
+
+        .left {
+            transform: rotate(135deg);
+            -webkit-transform: rotate(135deg);
+        }
+
+        .up {
+            transform: rotate(-135deg);
+            -webkit-transform: rotate(-135deg);
+        }
+
+        .down {
+            transform: rotate(45deg);
+            -webkit-transform: rotate(45deg);
+        }
+
+
+        canvas {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+<h1 class="text-white">ESP32 thermistor regulator</h1>
+<div id="app">
+    <div>
+   
+   <div  class="input-group mb-3">  
+    <span class="input-group-text">Current temperature</span>
+   <input disabled placeholder="temperature" aria-label="temperature" class="form-control" type="number" v-model="temperature"/> <br>
+</div>
+<div  class="input-group mb-3">  
+    <span class="input-group-text">Setted value</span>
+    <input placeholder="Setted value" aria-label="Setted value" class="form-control" type="number" v-model="set_value"/> <br>
+</div>
+<div  class="input-group mb-3">  
+    <input placeholder="Histeresis" aria-label="Hiszterézis" class="form-control" type="number" v-model="histerisis"/><br>
+    <span class="input-group-text">Histeresis</span>
+</div>
+
+<div  class="input-group mb-3">  
+    <span class="input-group-text">Timer</span>
+    <input placeholder="Timer" aria-label="Timer" class="form-control" type="number" v-model="timer1"/> <br>
+</div>
+<button class="btn btn-success" @click="start_cnt" v-if="!timer_modeon">Start</button>
+<button class="btn btn-danger" @click="stop_cnt" v-else>Stop</button>
+
+<pre>
+    16-relay pin
+    36- Thermistor pin
+</pre>
+</div>
+</div>
+
+</div>
+</body>
+<script>
+    var app = new Vue({
+  el: '#app',
+  data: {
+    temperature:0,
+    set_value:0,
+    histerisis:4,
+    timer1:0,
+    timer_modeon:false,
+  },
+  mounted()
+  {
+    setInterval(this.getdata,1000);
+  },
+  methods:{
+    getdata()
+    {
+        if(this.timer_modeon)
+        {
+        if(this.timer1>0)
+        {
+            this.timer1=this.timer1-1;
+        }
+        else
+        {
+            this.set_value=0;
+            this.timer_modeon=false;
+
+        }
+        }
+        axios.get(`http://192.168.1.1/gettemp?set_value=${this.set_value}&histerisis=${this.histerisis}`).then((response)=>
+        {
+            this.temperature=response.data.temperature;
+            //response.
+        })
+    },
+    start_cnt()
+    {
+        this.timer_modeon=true;
+    },
+    stop_cnt()
+    {
+        this.timer_modeon=false;
+        this.timer1=0;
+    }
+  }
+
+})
+</script>
+</html>
